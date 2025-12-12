@@ -18,8 +18,8 @@ def scrape_site(url):
         
     return rooms
 
-hotel1_url = "https://booking-hotels2.tiiny.site/"
-hotel2_url = "https://hotel1.tiiny.site/"
+hotel1_url = "https://books.toscrape.com/catalogue/category/books/travel_2/index.html"
+hotel2_url = "https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"
 
 hotel1_data = scrape_site(hotel1_url)
 hotel2_data = scrape_site(hotel2_url)
