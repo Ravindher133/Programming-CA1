@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def scrape_site(url):
-    rooms = []
+    books = []
     
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -14,27 +14,27 @@ def scrape_site(url):
         title = item.h3.a["title"]
         price = item.select_one(".price_color").text
         
-        rooms.append([title, price])
+        books.append([title, price])
         
-    return rooms
+    return books
 
-hotel1_url = "https://books.toscrape.com/catalogue/category/books/travel_2/index.html"
-hotel2_url = "https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"
+book1_url = "https://books.toscrape.com/catalogue/category/books/travel_2/index.html"
+book2_url = "https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"
 
-hotel1_data = scrape_site(hotel1_url)
-hotel2_data = scrape_site(hotel2_url)
+book1_data = scrape_site(book1_url)
+book2_data = scrape_site(book2_url)
 
 csv_filename = "hotel_prices.csv"
 
 with open(csv_filename, "w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
-    writer.writerow(["Hotel", "Room Name", "Price"])
+    writer.writerow(["Book", "Book Name", "Price"])
     
-    for room in hotel1_data:
-        writer.writerow(["Hotel A", room[0], room[1]])
+    for book in book1_data:
+        writer.writerow(["Book A", book[0], book[1]])
         
-    for room in hotel2_data:
-        writer.writerow(["Hotel B", room[0], room[1]])
+    for book in book2_data:
+        writer.writerow(["Book B", book[0], book[1]])
         
 print(f" Data saved in {csv_filename}")
 
