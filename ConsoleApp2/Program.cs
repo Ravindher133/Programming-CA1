@@ -5,7 +5,6 @@ class Program
 {
     static void Main()
     {
-        // Dictionary to store extension and its description
         Dictionary<string, string> fileInfo = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             { ".mp4",  "Video file (MPEG-4 Part 14)" },
@@ -47,7 +46,6 @@ class Program
                 break;
             }
 
-            // Ensure extension starts with dot
             if (!input.StartsWith("."))
             {
                 input = "." + input;

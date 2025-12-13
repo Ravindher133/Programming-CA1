@@ -10,14 +10,11 @@ import os
 import random
 from datetime import datetime
 
-# Configuration
-HOST = "0.0.0.0"      # listen on all interfaces (change to '127.0.0.1' for local-only)
+HOST = "0.0.0.0"      
 PORT = 9000
 DB_FILE = "applications.db"
-# Shared secret for HMAC (change to a strong secret before submission)
 SHARED_SECRET = b"very_secret_key_change_me"
 
-# Ensure DB and table exist
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -38,20 +35,17 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Generate unique application number
 def generate_app_no():
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     rand4 = f"{random.randint(0, 9999):04d}"
     return f"DBS-{ts}-{rand4}"
 
-# Verify HMAC (payload_bytes is the JSON bytes of applicant portion or whole payload without hmac)
 def verify_hmac(payload_bytes: bytes, received_hmac_hex: str) -> bool:
     mac = hmac.new(SHARED_SECRET, payload_bytes, hashlib.sha256).hexdigest()
     return hmac.compare_digest(mac, received_hmac_hex)
 
-# Load applicants into DB
+#DB
 def store_application(applicant: dict, client_id: str) -> str:
-    # Validation (server-side)
     name = applicant.get("name", "").strip()
     addr = applicant.get("address", "").strip()
     quals = applicant.get("qualifications", "").strip()
@@ -78,7 +72,6 @@ def store_application(applicant: dict, client_id: str) -> str:
     conn.close()
     return app_no
 
-# Read exactly n bytes from a socket
 def recv_all(conn: socket.socket, n: int) -> bytes:
     data = b""
     while len(data) < n:
@@ -92,7 +85,6 @@ def handle_client(conn: socket.socket, addr):
     peer = f"{addr[0]}:{addr[1]}"
     print(f"[+] Connection from {peer}")
     try:
-        # Read length prefix (4 bytes)
         raw_len = recv_all(conn, 4)
         if not raw_len:
             print("[-] No data (client closed).")
@@ -103,7 +95,6 @@ def handle_client(conn: socket.socket, addr):
             print("[-] Incomplete payload.")
             return
 
-        # Parse JSON
         try:
             data = json.loads(payload.decode("utf-8"))
         except Exception as e:
@@ -112,7 +103,6 @@ def handle_client(conn: socket.socket, addr):
             print("[-] Invalid JSON from", peer)
             return
 
-        # Expected structure: {"applicant":{...}, "client_id": "...", "hmac":"..."}
         received_hmac = data.get("hmac", "")
         client_id = data.get("client_id", "unknown")
         applicant_obj = data.get("applicant")
@@ -120,15 +110,12 @@ def handle_client(conn: socket.socket, addr):
             send_response(conn, {"status":"error","message":"No applicant data"})
             return
 
-        # Recompute HMAC over the applicant JSON bytes (deterministic)
-        # Use compact JSON encoding (sorted keys) to ensure same bytes as client
         applicant_bytes = json.dumps(applicant_obj, separators=(",", ":"), sort_keys=True).encode("utf-8")
         if not verify_hmac(applicant_bytes, received_hmac):
             send_response(conn, {"status":"error","message":"HMAC verification failed"})
             print("[-] HMAC failed for", peer)
             return
 
-        # Store in DB (with validation)
         try:
             app_no = store_application(applicant_obj, client_id)
         except Exception as e:
@@ -136,7 +123,6 @@ def handle_client(conn: socket.socket, addr):
             print("[-] Store error:", e)
             return
 
-        # Success -> send back application number
         send_response(conn, {"status":"ok","app_no":app_no})
         print(f"[+] Stored application {app_no} from {client_id} ({peer})")
 
